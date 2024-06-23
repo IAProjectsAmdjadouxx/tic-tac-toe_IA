@@ -3,8 +3,17 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Flatten, concatenate
 import os
+from tensorflow.keras.callbacks import TensorBoard
+from time import time
 
+#rm log dir
+list_file = os.listdir()
+if "logs" in list_file:
+    os.remove("./logs")
+tensorboard = TensorBoard(log_dir="logs".format(time()))
 
+NAME_AI = "TTT_model"
+EPOCHS = 90
 
 class TicTacToeDataGenerator:
     @staticmethod
@@ -43,7 +52,7 @@ class TicTacToeModel:
         self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
     def train(self, X_board, X_player, y, epochs=50, batch_size=32, validation_split=0.2):
-        self.model.fit([X_board, X_player], y, epochs=epochs, batch_size=batch_size, validation_split=validation_split)
+        self.model.fit([X_board, X_player], y, epochs=epochs, batch_size=batch_size, validation_split=validation_split, callbacks=[tensorboard])
 
     def save(self, path):
         self.model.save(path)
@@ -58,14 +67,14 @@ class TicTacToeModel:
 if __name__ == "__main__":
     files = os.listdir()
 
-    if "tic_tac_toe_model.h5" not in files:
+    if NAME_AI + ".keras" not in files:
         num_samples = 1000
         data_generator = TicTacToeDataGenerator()
         X_board, X_player, y = data_generator.generate_data(num_samples)
         tic_tac_toe_model = TicTacToeModel()
         tic_tac_toe_model.compile()
-        tic_tac_toe_model.train(X_board, X_player, y, 500)
-        tic_tac_toe_model.save("tic_tac_toe_model.h5")
+        tic_tac_toe_model.train(X_board, X_player, y, EPOCHS)
+        tic_tac_toe_model.save(NAME_AI + ".keras")
 
     tic_tac_toe_model = TicTacToeModel()
     while True:
