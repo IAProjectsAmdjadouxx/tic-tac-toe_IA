@@ -1,37 +1,91 @@
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, Flatten, concatenate
+from tensorflow.keras.layers import Input, Dense, Flatten, concatenate, Dropout
 import os
 from tensorflow.keras.callbacks import TensorBoard
 from time import time
 
 #rm log dir
 list_file = os.listdir()
-if "logs" in list_file:
-    os.remove("./logs")
-tensorboard = TensorBoard(log_dir="logs".format(time()))
 
 NAME_AI = "TTT_model"
-EPOCHS = 90
+EPOCHS = 10
 
 class TicTacToeDataGenerator:
     @staticmethod
     def generate_data(num_samples):
         X_board, X_player, y = [], [], []
+        i = 0
 
-        for _ in range(num_samples):
+        while i < num_samples:
             board = np.random.choice([0, 1, 2], size=(3, 3))
             player = np.random.choice([1, 2])
             possible_moves = np.argwhere(board == 0)
 
             if possible_moves.size > 0:
-                move = possible_moves[np.random.choice(len(possible_moves))]
+                move = TicTacToeDataGenerator.minimax(board, player)
+                is_in = False
+                for j in range(len(X_player)):
+                    if np.array_equal(X_board[j], board) and X_player[j] == player and y[j] == move[0] * 3 + move[1]:
+                        is_in = True
+                        break
+                if is_in:
+                    continue
                 X_board.append(board)
                 X_player.append(player)
                 y.append(move[0] * 3 + move[1])
+                print(f"Generated {i + 1}/{num_samples} samples:\n {board}, {player}, {move}")
+                i += 1
 
         return np.array(X_board), np.array(X_player).reshape(-1, 1), np.array(y)
+
+    @staticmethod
+    def minimax(board, player):
+        def is_winner(board, player):
+            for i in range(3):
+                if np.all(board[i, :] == player) or np.all(board[:, i] == player):
+                    return True
+            if np.all(np.diag(board) == player) or np.all(np.diag(np.fliplr(board)) == player):
+                return True
+            return False
+
+        def minimax_helper(board, player, depth, is_maximizing):
+            opponent = 1 if player == 2 else 2
+            if is_winner(board, player):
+                return 10 - depth
+            elif is_winner(board, opponent):
+                return depth - 10
+            elif not np.any(board == 0):
+                return 0
+
+            if is_maximizing:
+                best_score = -np.inf
+                for move in np.argwhere(board == 0):
+                    board[move[0], move[1]] = player
+                    score = minimax_helper(board, player, depth + 1, False)
+                    board[move[0], move[1]] = 0
+                    best_score = max(score, best_score)
+                return best_score
+            else:
+                best_score = np.inf
+                for move in np.argwhere(board == 0):
+                    board[move[0], move[1]] = opponent
+                    score = minimax_helper(board, player, depth + 1, True)
+                    board[move[0], move[1]] = 0
+                    best_score = min(score, best_score)
+                return best_score
+
+        best_move = None
+        best_score = -np.inf
+        for move in np.argwhere(board == 0):
+            board[move[0], move[1]] = player
+            score = minimax_helper(board, player, 0, False)
+            board[move[0], move[1]] = 0
+            if score > best_score:
+                best_score = score
+                best_move = move
+        return best_move
 
 class TicTacToeModel:
     def __init__(self):
@@ -42,14 +96,16 @@ class TicTacToeModel:
         flatten_board = Flatten()(input_board)
         input_player = Input(shape=(1,), name='input_player')
         combined = concatenate([flatten_board, input_player])
-        z = Dense(128, activation='relu')(combined)
-        z = Dense(64, activation='relu')(z)
-        output = Dense(9, activation='softmax')(z)
+        dense_1 = Dense(64, activation='relu')(combined)
+        dropout_1 = Dropout(0.5)(dense_1)
+        dense_2 = Dense(32, activation='relu')(dropout_1)
+        dropout_2 = Dropout(0.5)(dense_2)
+        output = Dense(9, activation='linear')(dropout_2)
         model = Model(inputs=[input_board, input_player], outputs=output)
         return model
 
     def compile(self):
-        self.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+        self.model.compile(optimizer='adam', loss='crossentropy', metrics=['accuracy'])
 
     def train(self, X_board, X_player, y, epochs=50, batch_size=32, validation_split=0.2):
         self.model.fit([X_board, X_player], y, epochs=epochs, batch_size=batch_size, validation_split=validation_split, callbacks=[tensorboard])
@@ -68,10 +124,14 @@ if __name__ == "__main__":
     files = os.listdir()
 
     if NAME_AI + ".keras" not in files:
-        num_samples = 1000
+        if "logs" in list_file:
+            os.system("rm -rf logs")
+        tensorboard = TensorBoard(log_dir="logs".format(time()))
+        num_samples = 250
         data_generator = TicTacToeDataGenerator()
         X_board, X_player, y = data_generator.generate_data(num_samples)
         tic_tac_toe_model = TicTacToeModel()
+        tic_tac_toe_model.model.summary()
         tic_tac_toe_model.compile()
         tic_tac_toe_model.train(X_board, X_player, y, EPOCHS)
         tic_tac_toe_model.save(NAME_AI + ".keras")

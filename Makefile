@@ -3,11 +3,10 @@ NAME_AI = TTT_model.keras
 SRC = main.py
 LOG_DIR = logs
 
-train: fclean
+all:
 	$(PY) $(SRC)
 
-all:
-	@if [ -d $(LOG_DIR) ]; then rm -rf $(LOG_DIR); fi
+train: fclean
 	$(PY) $(SRC)
 
 stats:
