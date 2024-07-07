@@ -1,2 +1,4 @@
 # tic-tac-toe_IA
-an IA which predict the best move to play in a tic-tac-toe game **NOT FINISHED YET**
+an supervised neuronal network which predict the best move to do in a tic-tac-toe game
+
+**NOT GOOD RESULT** (but you can use it as a base for your project)
