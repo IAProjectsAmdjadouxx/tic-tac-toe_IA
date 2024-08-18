@@ -1,9 +1,17 @@
 ## tic-tac-toe_IA
 
 
-**BEFORE:** a supervised neural network which predict the best move to do in a tic-tac-toe game
+An agent which has been train with q-learning ton play tic tac toe.
 
-*NOT GOOD RESULT*
+I made this projet to understand how reinforcement learning works.
 
+his result are not bad but can be way much better with some fine tuning, you can use it as a base for your project
 
-**NOW:** A more efficient version with q-learning with better training data and better results **is coming soon**
+## Launch
+
+to launch the IA just execute the main.py file with this command:
+
+```
+python 3 main.py
+```
+
