@@ -21,7 +21,7 @@ from agent import QLearningTicTacToeAgent
 def train():
     env = TicTacToeEnv()
     agent = QLearningTicTacToeAgent(alpha=0.1, gamma=0.9, epsilon=0.1)
-    episodes = 1000
+    episodes = 5000
 
     for episode in range(episodes):
         state = env.reset()
@@ -30,6 +30,7 @@ def train():
         while not done:
             action = agent.choose_action(state)
             next_state, reward, done = env.step(action)
+            print(f"Episode {episode}, action {action}, reward {reward}, done {done}")
             agent.update_q_value(state, action, reward, next_state)
             state = next_state
 
@@ -59,6 +60,13 @@ def play_vs_ia():
         print(f'{env.winner} wins!')
     else:
         print('It\'s a draw!')
+
+def minMaxtest():
+    env = TicTacToeEnv()
+    env.board = ['X', 'O', 'X', 'O', 'X', 'O', ' ', ' ', ' ']
+    env.current_player = 'X'
+    env.render(env.board)
+    print(minMaxChecker(env.board, env.current_player))
 
 if __name__ == '__main__':
     inpt = input('Train or play? (train/play): ')
