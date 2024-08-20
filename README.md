@@ -1,7 +1,7 @@
 ## tic-tac-toe_IA
 
 
-An agent which has been train with q-learning ton play tic tac toe.
+An agent which has been train with q-learning to play tic tac toe.
 
 I made this projet to understand how reinforcement learning works.
 
